@@ -1,2 +1,2 @@
 # Trade Indicators
-Trade Indicators for Tradingview
+Trade Indicators for Tradingview by using Pine Script
