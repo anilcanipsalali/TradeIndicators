@@ -1,83 +1,107 @@
-// © anilcanipsalali
+// ©anilcanipsalali
+// @version=4
+study(title="Bonito's Indicator v1", overlay=true, max_labels_count=500)
 
-//@version=4
-study("Trade Indicators by anilcanipsalali", overlay=true)
+startTime = input(defval = timestamp("01 Jan 2021 13:30 UTC+3"), title = "Start Time", type = input.time)
+inDateRange = time >= startTime
 
-//EMA
-emaShortPD = input(title="EMA Short Period", defval=9, minval=1)
-emaLongPD = input(title="EMA Long Period", defval=21, minval=1)
+//-------------------------------------------------------------------------- Moving Fibonacci -------------------------------------------------------------------------------
+    // Getting Inputs
+FibLength = input(144, title="Fibonacci Length")
+Fib(len, ratio) =>
+    range = highest(len) - lowest(len)
+    rangeRatio = highest(len) - (range * ratio)
+    
+    //Plotting  
+fill(plot(Fib(FibLength, 0), color=color.white, title="0%", linewidth=2), plot(Fib(FibLength, .35), color=color.orange, title="65%", linewidth=2), color.rgb(255,0,0,90))
+fill(plot(Fib(FibLength, .382), color=color.orange, title="0%", linewidth=2), plot(Fib(FibLength, .35), color=color.orange, title="35%", linewidth=2), color.rgb(255,165,0,90))
+plot(Fib(FibLength, .236), color=color.white , title ="%78.6", linewidth=2)
+plot(Fib(FibLength, .5), color=color.green , title ="%50", linewidth=2)
+plot(Fib(FibLength, .786), color=color.white , title ="%23.6", linewidth=2)
+fill(plot(Fib(FibLength, .618), color=color.orange, title="0%", linewidth=2), plot(Fib(FibLength, .65), color=color.orange, title="35%", linewidth=2), color.rgb(255,165,0,90))
+fill(plot(Fib(FibLength, 1), color=color.white, title="0%", linewidth=2), plot(Fib(FibLength, .65), color=color.orange, title="35%", linewidth=2), color.rgb(0,255,0,90))
 
-emaShortGC = input(title="EMA Short Golden Cross", defval=50, minval=1)
-emaLongGC = input(title="EMA Long Golden Cross", defval=200, minval=1)
+plotshape(Fib(FibLength, 0),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%100")
+plotshape(Fib(FibLength, .236),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%78.6")
+plotshape(Fib(FibLength, .35),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%65")
+plotshape(Fib(FibLength, .382),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%61.8")
+plotshape(Fib(FibLength, .5),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%50")
+plotshape(Fib(FibLength, .618),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%38.2")
+plotshape(Fib(FibLength, .65),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%35")
+plotshape(Fib(FibLength, .786),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%23.6")
+plotshape(Fib(FibLength, 1),location=location.absolute,size = size.tiny,textcolor=color.white,show_last=1,offset = 1,text="%0")
 
-ema1 = ema(close, emaShortPD)
-ema2 = ema(close, emaLongPD)
-ema3 = ema(close, emaShortGC)
-ema4 = ema(close, emaLongGC)
-
-
-upTrend = plot(ema1, color=#4DFF00, linewidth=2, title="EMA Short", transp=0)
-downTrend = plot(ema2, color=#FF0C00, linewidth=2, title="EMA Long", transp=0)
-
-buy = crossover(ema1, ema2) 
-sell = crossover(ema2, ema1)
-goldenbuy = crossover(ema3, ema4)
-deathcross = crossover(ema4, ema3)
-
-barbuy = ema1 >= ema2
-barsell = ema2 < ema1
-
-plotshape(buy, title="EMA Buy", text='EMA Buy', style= shape.triangleup, location = location.belowbar, color=color.green, textcolor=color.green, transp=0, size = size.tiny)
-plotshape(sell, title="EMA Sell", text='EMA Sell', style= shape.triangledown, location = location.abovebar, color=color.red, textcolor=color.red, transp=0, size = size.tiny)
-
-plotshape(goldenbuy, title="Golden Cross", text='Golden Cross', style= shape.labelup, location = location.belowbar, color=#FFD700, textcolor=color.white, transp=0, size = size.large)
-plotshape(deathcross, title="Death Cross", text='Death Cross', style= shape.labeldown, location = location.abovebar, color=color.black, textcolor=color.white, transp=0, size = size.large)
-
-barcolor(barbuy? #4DFF00 : barsell? #FF0C00 : #FF0C00)
-fill(upTrend, downTrend, color = ema1 >= ema2? #4DFF00 : #FF0C00, transp=80, title="EMA Fill Color")
-
-//RSI
+//-------------------------------------------------------------------------- RSI Signal ----------------------------------------------------------------------------------
+    //Getting Inputs
 rsiSource = input(title="RSI Source", type=input.source, defval=close)
 rsiLength = input(title="RSI Length", type=input.integer, defval=14)
 rsiOverbought = input(title="RSI Overbought Level", type=input.integer, defval=80)
+rsiBuy = input(title="RSI Buy Level", type=input.integer, defval=25)
+rsiSell = input(title="RSI Sell Level", type=input.integer, defval=75)
 rsiOversold = input(title="RSI Oversold Level", type=input.integer, defval=20)
 
+    //Getting RSI Value
 rsiValue = rsi(rsiSource, rsiLength)
 isRsiOB = rsiValue >= rsiOverbought
 isRsiOS = rsiValue <= rsiOversold
+isRsiBuy = rsiValue <= rsiBuy and rsiValue > rsiOversold
+isRsiSell = rsiValue >= rsiSell and rsiValue < rsiOverbought
 
-plotshape(isRsiOB, title="Overbought", location=location.abovebar, color=color.red, transp=0, style=shape.triangledown, text="RSI OB")
-plotshape(isRsiOS, title="Oversold", location=location.belowbar, color=color.green, transp=0, style=shape.triangleup, text="RSI OS")
+    //Plotting
+if(isRsiOB and inDateRange)
+    rsiOBLabel = label.new(x=bar_index, y=high, text="RSI OB", textcolor=color.red, style=label.style_none, size=size.small)
+if(isRsiOS and inDateRange)
+    rsiOSLabel = label.new(x=bar_index, y=low, text="RSI OS", textcolor=color.green, style=label.style_none, size=size.small)
+if(isRsiBuy and inDateRange)
+    rsiBuyLabel = label.new(x=bar_index, y=low, text="RSI Buy", textcolor=color.green, style=label.style_none, size=size.small)
+if(isRsiSell and inDateRange)
+    rsiSellLabel = label.new(x=bar_index, y=high, text="RSI Sell", textcolor=color.red, style=label.style_none, size=size.small)
+//-------------------------------------------------------------------------- Deadcross, Silvercross, Goldencross -----------------------------------------------------------------------------------
+    //Getting Input
+movingaverage_fast = sma(close, input(title="SMA Fast", type=input.integer, defval=50))
+movingaverage_slow = sma(close, input(title="SMA Slow", type=input.integer, defval=200))
+movingaverage_medium = sma(close, input(title="SMA Medium", type=input.integer, defval=21))
 
-//MACD
-fastLength = ema(close, 12)
-slowLength = ema(close, 26)
-macd = fastLength - slowLength
-signalVal = ema(macd, 9)
+    // Calculation
+golden_cross = crossover(movingaverage_fast, movingaverage_slow)
+death_cross = crossunder(movingaverage_fast, movingaverage_slow)
+silver_cross = crossover(movingaverage_fast, movingaverage_medium)
 
-macdBuy = crossover(macd, signalVal)
-macdSell = crossover(signalVal, macd)
+    //Plotting
+plot(movingaverage_fast, color=color.green)
+plot(movingaverage_slow, color=color.red)
+plotshape (golden_cross and inDateRange,location=location.belowbar,text="Golden Cross",size = size.tiny, style=shape.triangleup, textcolor=color.white, color = color.yellow)
+plotshape (death_cross and inDateRange,location=location.abovebar,text="Death Cross",size = size.tiny, style=shape.triangledown,textcolor=color.white, color = color.red)
+plotshape (silver_cross and inDateRange,location=location.belowbar,text="Silver Cross",size = size.tiny, style=shape.triangleup,textcolor=color.white, color = color.silver)
+//-------------------------------------------------------------------------- Bollinger Signal ----------------------------------------------------------------------------------------------------
+    //Getting Input
+bollingerMid = sma(close, 20)
+dev = stdev(close, 20)
+bollingerUpr = bollingerMid + 2*dev
+bollingerLwr = bollingerMid - 2*dev
+isBollingerBuy = close < bollingerLwr
+isBollingerSell = close > bollingerUpr
 
-plotshape(macdBuy, title="MACD BUY", text='MACD Buy', style= shape.triangleup, location = location.belowbar, color=color.green, textcolor=color.green, transp=0, size = size.small)
-plotshape(macdSell, title="MACD SELL", text='MACD Sell', style= shape.triangledown, location = location.abovebar, color=color.red, textcolor=color.red, transp=0, size = size.small)
+    //Plotting
+bgcolor(color = isBollingerBuy ? color.rgb(0,255,0,75) : na)
+bgcolor(color = isBollingerSell ? color.rgb(255,0,0,75) : na)
 
-//Moving Fibonacci
-fibLength = input(60, title="Fib Length")
+//-------------------------------------------------------------------------- Williams %R Signal ----------------------------------------------------------------------------------------------------
+    //Getting Input
+williamOB = input(title="William %R Overbought Level", type=input.integer, defval=-2)
+williamOS = input(title="William %R Oversold Level", type=input.integer, defval=-90)
+williamLength = input(title="William Length", defval=14)
+wiliiamSource = input(close, "William Source")
+_pr(williamLength) =>
+	Wmax = highest(williamLength)
+	Wmin = lowest(williamLength)
+	100 * (wiliiamSource - Wmax) / (Wmax - Wmin)
+percentR = _pr(williamLength)
+isWilliamBuy = percentR >= williamOB
+isWilliamSell = percentR <= williamOS
 
-Fib(len, ratio) =>
-    range = highest(len) - lowest(len)
-    range_ratio = highest(len) -  (range * ratio)
-
-fill(plot(Fib(fibLength, .0), color=color.white, title="0%", linewidth=1), plot(Fib(fibLength, .382), color=color.yellow, title="38.2%", linewidth=1), color=color.red, transp=90)
-plot(Fib(fibLength, .236), color=color.red, title="23.6%", linewidth=1)
-plot(Fib(fibLength, .5), color=color.lime, title="50%", linewidth=1)
-plot(Fib(fibLength, .786), color=color.teal, title="78.6%", linewidth=1)
-fill(plot(Fib(fibLength, 1), color=color.white, title="100%", linewidth=1), plot(Fib(fibLength, .618), color=color.aqua, title="61.8%", linewidth=1), color=color.yellow, transp=90)
-
-//Identify engulfing candles
-bullishEC = close >= open[1] and close[1] < open[1]
-bearishEC = close <= open[1] and close[1] > open[1]
-tradeSignal = ((isRsiOS or isRsiOS[1]) and bullishEC) or ((isRsiOB or isRsiOB[1]) and bearishEC)
-
-plotshape(tradeSignal and bearishEC, title="Bearish Indicator", style=shape.labeldown, location=location.abovebar, color=color.red, transp=0, text="Bearish Sell", textcolor=color.white)
-plotshape(tradeSignal and bullishEC, title="Bullish Indicator", style=shape.labelup, location=location.belowbar, color=color.green, transp=0, text="Bullish Buy", textcolor=color.white)
+    //Plotting
+if(isWilliamBuy and inDateRange)
+    williamOBLabel = label.new(x=bar_index, y=high*1.10, text="William %R OB", textcolor=color.red, style=label.style_none, size=size.normal)
+if(isWilliamSell and inDateRange)
+    williamOSLabel = label.new(x=bar_index, y=low*0.85, text="William %R OS", textcolor=color.green, style=label.style_none, size=size.normal)
